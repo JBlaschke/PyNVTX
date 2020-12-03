@@ -114,7 +114,7 @@ ext_modules = [
         "PyNVTX",
         sorted(glob("src/*.cu")),
         library_dirs=[CUDA["lib64"]],
-        libraries=["cudart"],
+        libraries=["cudart", "nvToolsExt"],
         runtime_library_dirs=[CUDA["lib64"]],
         # this syntax is specific to this build system we're only going to use
         # certain compiler args with nvcc and not with gcc the implementation of
@@ -123,8 +123,9 @@ ext_modules = [
         #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
         #                              "-c", "--compiler-options", "'-fPIC'"]},
         extra_compile_args={"gcc": [],
-                            "nvcc": ["--ptxas-options=-v", "-lnvToolsExt",
-                                     "-c", "--compiler-options", "'-fPIC'"]},
+                            "nvcc": ["-std=c++11", "-O3", "-shared",
+                                     "--compiler-options", "-fPIC",
+                                     "-lnvToolsExt",]},
         include_dirs=[CUDA["include"], "src"]
                     + [pybind11.get_include(True ), pybind11.get_include(False)]
     )
