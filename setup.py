@@ -4,6 +4,7 @@
 
 import os
 import pybind11
+import setuptools
 
 from os.path                     import join as pjoin
 from glob                        import glob
@@ -131,9 +132,30 @@ ext_modules = [
     )
 ]
 
+
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+
+
 setup(
     name="PyNVTX",
+    version="0.0.1",
+    author="Johannes Blaschke",
+    author_email="johannes@blaschke.science",
+    description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",
     ext_modules=ext_modules,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/JBlaschke/PyNVTX",
+    packages=setuptools.find_packages(),
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires='>=3.6',
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},
 )
