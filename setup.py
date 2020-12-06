@@ -141,7 +141,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="PyNVTX",
-    version="0.0.1",
+    version="0.0.4",
     author="Johannes Blaschke",
     author_email="johannes@blaschke.science",
     description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",
@@ -156,6 +156,9 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=[
+      'pybind11',
+    ],
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},
 )
