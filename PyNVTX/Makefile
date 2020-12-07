@@ -6,7 +6,7 @@ NVOPTS   := --compiler-options -fPIC
 INCLUDES := $(shell python -m pybind11 --includes)
 PYSUFFIX := $(shell python3-config --extension-suffix)
 
-all: PyNVTX$(PYSUFFIX)
+all: PyNVTX_backend$(PYSUFFIX)
 
 
 %$(PYSUFFIX): %.cu
