@@ -3,7 +3,7 @@
 
 
 
-PYBIND11_MODULE(PyNVTX, m) {
+PYBIND11_MODULE(PyNVTX_backend, m) {
     m.def(
         "RangePush",
         [](const char * label) {

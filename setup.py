@@ -112,8 +112,8 @@ CUDA = locate_cuda()
 
 ext_modules = [
     Extension(
-        "PyNVTX",
-        sorted(glob("src/*.cu")),
+        "PyNVTX_backend",
+        sorted(glob("PyNVTX/*.cu")),
         library_dirs=[CUDA["lib64"]],
         libraries=["cudart", "nvToolsExt"],
         runtime_library_dirs=[CUDA["lib64"]],
@@ -127,7 +127,7 @@ ext_modules = [
                             "nvcc": ["-std=c++11", "-O3", "-shared",
                                      "--compiler-options", "-fPIC",
                                      "-lnvToolsExt",]},
-        include_dirs=[CUDA["include"], "src"]
+        include_dirs=[CUDA["include"], "PyNVTX"]
                     + [pybind11.get_include(True ), pybind11.get_include(False)]
     )
 ]
@@ -141,7 +141,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="PyNVTX",
-    version="0.0.4",
+    version="0.1.0",
     author="Johannes Blaschke",
     author_email="johannes@blaschke.science",
     description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",
