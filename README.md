@@ -25,6 +25,8 @@ nvtx.RangePop()
 This will put `RangePushA` and `RangePop` the the beginning and and of the
 function call:
 ```python
+import PyNVTX as nvtx
+
 @nvtx.mark("test_function")
 def test():
     # You code goes here
