@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-rm -r PyNVTX.egg-info/ PyNVTX_backend.egg-info/ build/ dist/
+rm -r PyNVTX.egg-info/ build/ dist/
