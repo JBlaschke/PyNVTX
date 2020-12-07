@@ -13,7 +13,7 @@ import PyNVTX as nvtx
 
 nvtx.RangePushA("Generating Random Data")
 
-giant_data = np.random.rand(1024**3)
+// code to time goes here
 
 nvtx.RangePop()
 ```
