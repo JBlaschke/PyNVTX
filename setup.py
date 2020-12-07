@@ -141,7 +141,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="PyNVTX",
-    version="0.1.0",
+    version="0.1.1",
     author="Johannes Blaschke",
     author_email="johannes@blaschke.science",
     description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",

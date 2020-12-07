@@ -9,59 +9,67 @@ from   mpi4py import MPI
 
 
 
-#_______________________________________________________________________________
-# Initialize CUDA Driver
-#
-nvtx.RangePushA("Initializing PyCUDA Driver")
+@nvtx.mark("test_function")
+def test():
+    #___________________________________________________________________________
+    # Initialize CUDA Driver
+    #
+    nvtx.RangePushA("Initializing PyCUDA Driver")
 
-import pycuda
-import pycuda.driver    as drv
-from   pycuda.gpuarray import GPUArray, to_gpu
+    import pycuda
+    import pycuda.driver    as drv
+    from   pycuda.gpuarray import GPUArray, to_gpu
 
-drv.init()
+    drv.init()
 
-nvtx.RangePop()
-#-------------------------------------------------------------------------------
-
-
-#_______________________________________________________________________________
-# Generate sample data
-#
-nvtx.RangePushA("Generating Random Data")
-
-giant_data = np.random.rand(1024**3)
-
-nvtx.RangePop()
-#-------------------------------------------------------------------------------
+    nvtx.RangePop()
+    #---------------------------------------------------------------------------
 
 
-#_______________________________________________________________________________
-# Configure device context to use the GPU belonging to this rank
-#
-nvtx.RangePushA("Setting Device Context")
+    #___________________________________________________________________________
+    # Generate sample data
+    #
+    nvtx.RangePushA("Generating Random Data")
 
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-register(MPI.Finalize)
+    giant_data = np.random.rand(1024**3)
 
-dev = drv.Device(rank)
-ctx = dev.make_context()
-# ctx.push()  # NOTE: `make_context` seems to already pushto the context stack
-register(ctx.pop)
-
-nvtx.RangePop()
-#-------------------------------------------------------------------------------
+    nvtx.RangePop()
+    #---------------------------------------------------------------------------
 
 
-#_______________________________________________________________________________
-# Copy data to device
-#
-nvtx.RangePushA("Sending Data to Device")
+    #___________________________________________________________________________
+    # Configure device context to use the GPU belonging to this rank
+    #
+    nvtx.RangePushA("Setting Device Context")
 
-d_giant_data = to_gpu(giant_data)
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    register(MPI.Finalize)
 
-nvtx.RangePop()
-#-------------------------------------------------------------------------------
+    dev = drv.Device(rank)
+    ctx = dev.make_context()
+    # ctx.push()  # NOTE: `make_context` seems to already push to the context
+    # stack
+    register(ctx.pop)
+
+    nvtx.RangePop()
+    #---------------------------------------------------------------------------
 
 
-sleep(10)
+    #___________________________________________________________________________
+    # Copy data to device
+    #
+    nvtx.RangePushA("Sending Data to Device")
+
+    d_giant_data = to_gpu(giant_data)
+
+    nvtx.RangePop()
+    #---------------------------------------------------------------------------
+
+
+
+if __name__ == "__main__":
+
+    test()
+
+    sleep(10)
