@@ -13,7 +13,7 @@ import PyNVTX as nvtx
 
 nvtx.RangePushA("Generating Random Data")
 
-// code to time goes here
+# code to time goes here
 
 nvtx.RangePop()
 ```
