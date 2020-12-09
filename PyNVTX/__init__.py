@@ -53,4 +53,4 @@ def mark_all_methods(cls):
     for base in cls.__bases__:
         if base == object:
            continue
-        mark_all_methods(decorator, base)
+        mark_all_methods(base)
