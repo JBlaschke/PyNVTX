@@ -44,11 +44,11 @@ def mark_all_methods(cls):
         return
 
     for attr in cls.__dict__:
-        if callable(getattr(cls, attr)):
+        if callable(cls.__dict__[attr]):
             dec = mark(f"{cls}.{attr}")
-            setattr(cls, attr, dec(getattr(cls, attr)))
+            type.__setattr__(cls, attr, dec(cls.__dict__[attr]))
 
-    setattr(cls, dec_id_str(NVTX_IDENTIFIER), True)
+    type.__setattr__(cls, dec_id_str(NVTX_IDENTIFIER), True)
 
     for base in cls.__bases__:
         if base == object:
