@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 from functools import wraps
 
 from PyNVTX_backend import *
+from .singleton     import Singleton
+from .registry      import Registry
 
 
 major_version   = 0;
-minor_version   = 1;
-release_version = 3;
+minor_version   = 2;
+release_version = 0;
 
 NVTX_IDENTIFIER = "NVTX"
+REGISTRY = Registry()
 
 
 
@@ -44,6 +48,9 @@ def mark_all_methods(cls):
         return
 
     for attr in cls.__dict__:
+        if REGISTRY.skip(cls, attr):
+            continue
+
         if callable(cls.__dict__[attr]):
             dec = mark(f"{cls}.{attr}")
             type.__setattr__(cls, attr, dec(cls.__dict__[attr]))
