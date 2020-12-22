@@ -49,8 +49,39 @@ def test():
 
 ### Automatic Instrumentation
 
-The  `PyNVTX.mark_all_methods` will automatically decorate all methods in a
-class. A guard prevents accidentally decorating any method twice.
+The `PyNVTX.mark_all_methods` will automatically decorate all methods in a
+class, as well as all methods it inherits. A guard prevents accidentally
+decorating any method twice. Eg.:
+```python
+import PyNVTX as nvtx
+
+class MyClassA(object):
+    def __init__(self):
+        pass
+
+    def f(self):
+        pass
+
+class MyClassB(MyClassA):
+    def __init__(self):
+        pass
+
+    def g(self):
+        pass
+
+
+nvtx.mark_all_methods(MyClassB)
+```
+Will instrument `MyClassB`'s `__init__`, as well as `f` and `g`, but _not_
+`MyClassA`'s `__init__`.
+
+Adding a class/method name to `PyNVTX.REGISTRY` will prevent it from being
+instrumented by `PyNVTX.mark_all_methods`. For example:
+```python
+nvtx.REGISTRY.add(MyClassB, "f") # note the method name is a string
+nvtx.mark_all_methods(MyClassB)
+```
+will not instrument `f`.
 
 
 ## Example Code
