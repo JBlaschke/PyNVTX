@@ -6,7 +6,7 @@ import os
 import pybind11
 import setuptools
 
-from os.path                     import join as pjoin
+from os.path                     import join
 from glob                        import glob
 from setuptools                  import setup, Extension
 from distutils.command.build_ext import build_ext
@@ -15,13 +15,15 @@ from pybind11.setup_helpers      import Pybind11Extension
 
 
 def find_in_path(name, path):
-    """Find a file in a search path"""
+    """Find first instance of a file in a search path"""
 
     # Adapted fom http://code.activestate.com/recipes/52224
     for dir in path.split(os.pathsep):
-        binpath = pjoin(dir, name)
+        binpath = join(dir, name)
+
         if os.path.exists(binpath):
             return os.path.abspath(binpath)
+
     return None
 
 
@@ -35,25 +37,28 @@ def locate_cuda():
     """
 
     # First check if the CUDAHOME env variable is in use
-    if 'CUDAHOME' in os.environ:
-        home = os.environ['CUDAHOME']
-        nvcc = pjoin(home, 'bin', 'nvcc')
+    if "CUDAHOME" in os.environ:
+        home = os.environ["CUDAHOME"]
+        nvcc = join(home, "bin", "nvcc")
     else:
         # Otherwise, search the PATH for NVCC
-        nvcc = find_in_path('nvcc', os.environ['PATH'])
+        nvcc = find_in_path("nvcc", os.environ["PATH"])
+
         if nvcc is None:
-            raise EnvironmentError('The nvcc binary could not be '
-                'located in your $PATH. Either add it to your path, '
-                'or set $CUDAHOME')
+            print(" *** WARNING: The nvcc binary could not be located in your "
+                  "$PATH. Either add it to your path, or set $CUDAHOME")
+            return None
+
         home = os.path.dirname(os.path.dirname(nvcc))
 
-    cudaconfig = {'home': home, 'nvcc': nvcc,
-                  'include': pjoin(home, 'include'),
-                  'lib64': pjoin(home, 'lib64')}
+    cudaconfig = {"home": home, "nvcc": nvcc,
+                  "include": join(home, "include"),
+                  "lib64": join(home, "lib64")}
+
     for k, v in iter(cudaconfig.items()):
         if not os.path.exists(v):
-            raise EnvironmentError('The CUDA %s path could not be '
-                                   'located in %s' % (k, v))
+            print(f" *** ERROR: The CUDA {k} path could not be located in {v}")
+            return None
 
     return cudaconfig
 
@@ -108,29 +113,43 @@ class custom_build_ext(build_ext):
 
 CUDA = locate_cuda()
 
-
-
-ext_modules = [
-    Extension(
-        "PyNVTX_backend",
-        sorted(glob("PyNVTX/*.cu")),
-        library_dirs=[CUDA["lib64"]],
-        libraries=["cudart", "nvToolsExt"],
-        runtime_library_dirs=[CUDA["lib64"]],
-        # this syntax is specific to this build system we're only going to use
-        # certain compiler args with nvcc and not with gcc the implementation of
-        # this trick is in customize_compiler() below
-        # extra_compile_args={"gcc": [],
-        #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
-        #                              "-c", "--compiler-options", "'-fPIC'"]},
-        extra_compile_args={"gcc": [],
-                            "nvcc": ["-std=c++11", "-O3", "-shared",
-                                     "--compiler-options", "-fPIC",
-                                     "-lnvToolsExt",]},
-        include_dirs=[CUDA["include"], "PyNVTX"]
-                    + [pybind11.get_include(True ), pybind11.get_include(False)]
-    )
-]
+if CUDA == None:
+    ext_modules = [
+        Extension(
+            "PyNVTX_backend",
+            sorted(glob("PyNVTX/*.cpp")),
+            # this syntax is specific to this build system we're only going to
+            # use certain compiler args with nvcc and not with gcc the
+            # implementation of this trick is in customize_compiler() below
+            extra_compile_args={"gcc": [],},
+            include_dirs=["PyNVTX"]
+                        + [pybind11.get_include(True ),
+                           pybind11.get_include(False)]
+        )
+    ]
+else:
+    ext_modules = [
+        Extension(
+            "PyNVTX_backend",
+            sorted(glob("PyNVTX/*.cu")),
+            library_dirs=[CUDA["lib64"]],
+            libraries=["cudart", "nvToolsExt"],
+            runtime_library_dirs=[CUDA["lib64"]],
+            # this syntax is specific to this build system we're only going to
+            # use certain compiler args with nvcc and not with gcc the
+            # implementation of this trick is in customize_compiler() below
+            # extra_compile_args={"gcc": [],
+            #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
+            #                              "-c", "--compiler-options", "'-fPIC'"]},
+            extra_compile_args={"gcc": [],
+                                "nvcc": ["-std=c++11", "-O3", "-shared",
+                                         "--compiler-options", "-fPIC",
+                                         "-lnvToolsExt",]},
+            include_dirs=[CUDA["include"], "PyNVTX"]
+                        + [pybind11.get_include(True ),
+                           pybind11.get_include(False)]
+        )
+    ]
 
 
 
@@ -141,7 +160,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="PyNVTX",
-    version="0.2.0",
+    version="0.2.1",
     author="Johannes Blaschke",
     author_email="johannes@blaschke.science",
     description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",

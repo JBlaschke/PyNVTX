@@ -11,7 +11,7 @@ from .registry      import Registry
 
 major_version   = 0;
 minor_version   = 2;
-release_version = 0;
+release_version = 1;
 
 NVTX_IDENTIFIER = "NVTX"
 REGISTRY = Registry()

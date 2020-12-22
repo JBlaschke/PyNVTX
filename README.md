@@ -8,10 +8,12 @@ Currently supported features are:
 3. Automatic decorator generation `PyNVTX.mark_all_methods(<class name>)`
 
 
+
 ## Installation
 
-Ensure that the `CUDAHOME` environment variable points to your local CUDA
-install. To install, either
+Ensure that the `nvcc` is in your `PATH` -- or alternatively ensure that the
+`CUDAHOME` environment variable points to your local CUDA install. To install,
+either
 ```
 pip install PyNVTX
 ```
@@ -19,6 +21,23 @@ or clone this repo and
 ```
 python setup.py install
 ```
+
+
+### This Won't Break If You Don't Have CUDA
+
+You know what would suck? If including `PyNVTX` required CUDA to be installed?
+Why? There are loads of applications that support CUDA, if available. And
+default to the CPU-only version otherwise. `PyNVTX` is the same. If `nvcc` in
+not in your `PATH` (nor in your `CUDAHOME`), then you'll see this warning:
+```
+ *** WARNING: The nvcc binary could not be located in your $PATH. Either add it to your path, or set $CUDAHOME
+```
+and `PyNVTX` will still install (it just won't do anything). You can check if a
+local version of `PyNVTX` has been built with CUDA support by checking:
+```python
+PyNVTX.cuda_enabled # True if compiled with CUDA support
+```
+
 
 
 ## NVTX Markers (`nvtxRangePushA` / `nvtxRangePop`)
@@ -82,6 +101,7 @@ nvtx.REGISTRY.add(MyClassB, "f") # note the method name is a string
 nvtx.mark_all_methods(MyClassB)
 ```
 will not instrument `f`.
+
 
 
 ## Example Code
