@@ -32,8 +32,9 @@ not in your `PATH` (nor in your `CUDAHOME`), then you'll see this warning:
 ```
  *** WARNING: The nvcc binary could not be located in your $PATH. Either add it to your path, or set $CUDAHOME
 ```
-and `PyNVTX` will still install (it just won't do anything). You can check if a
-local version of `PyNVTX` has been built with CUDA support by checking:
+(note that it will not warn you if you're installing with pip) and `PyNVTX`
+will still install (it just won't do anything). You can check if a local
+version of `PyNVTX` has been built with CUDA support by checking:
 ```python
 PyNVTX.cuda_enabled # True if compiled with CUDA support
 ```
