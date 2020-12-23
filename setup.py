@@ -93,6 +93,7 @@ def customize_compiler_for_nvcc(self):
             postargs = extra_postargs['nvcc']
         else:
             postargs = extra_postargs['gcc']
+            return # do no compile the .cpp (as we're in nvcc mode)
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # Reset the default compiler_so, which we might have changed for cuda
@@ -103,11 +104,38 @@ def customize_compiler_for_nvcc(self):
 
 
 
+def customize_compiler_for_gcc(self):
+
+    # Tell the compiler it can processes .cu
+    self.src_extensions.append('.cu')
+
+    # Save references to the default compiler_so and _comple methods
+    super = self._compile
+
+    # Now redefine the _compile method. This gets executed for each
+    # object but distutils doesn't have the ability to change compilers
+    # based on source extension: we add it.
+    def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
+        if os.path.splitext(src)[1] == '.cu':
+            return
+
+        super(obj, src, ext, cc_args, postargs, pp_opts)
+
+    # Inject our redefined _compile method into the class
+    self._compile = _compile
+
+
+
+
 # Run the customize_compiler
 class custom_build_ext(build_ext):
     def build_extensions(self):
-        customize_compiler_for_nvcc(self.compiler)
-        build_ext.build_extensions(self)
+        if CUDA == None:
+            customize_compiler_for_gcc(self.compiler)
+            build_ext.build_extensions(self)
+        else:
+            customize_compiler_for_nvcc(self.compiler)
+            build_ext.build_extensions(self)
 
 
 
@@ -117,7 +145,8 @@ if CUDA == None:
     ext_modules = [
         Extension(
             "PyNVTX_backend",
-            sorted(glob("PyNVTX/*.cpp")),
+            sorted(glob(join("PyNVTX", "*.cpp")))
+            + sorted(glob(join("PyNVTX", "*.cu"))),
             # this syntax is specific to this build system we're only going to
             # use certain compiler args with nvcc and not with gcc the
             # implementation of this trick is in customize_compiler() below
@@ -131,7 +160,8 @@ else:
     ext_modules = [
         Extension(
             "PyNVTX_backend",
-            sorted(glob("PyNVTX/*.cu")),
+            sorted(glob(join("PyNVTX", "*.cpp")))
+            + sorted(glob(join("PyNVTX", "*.cu"))),
             library_dirs=[CUDA["lib64"]],
             libraries=["cudart", "nvToolsExt"],
             runtime_library_dirs=[CUDA["lib64"]],
@@ -160,7 +190,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="PyNVTX",
-    version="0.2.1",
+    version="0.2.2",
     author="Johannes Blaschke",
     author_email="johannes@blaschke.science",
     description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",
