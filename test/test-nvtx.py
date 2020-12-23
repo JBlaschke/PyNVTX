@@ -41,7 +41,7 @@ nvtx.RangePop()
 
 
 
-@nvtx.mark("Build CUDA code")
+@nvtx.annotate("Build CUDA code")
 def init():
 
     #___________________________________________________________________________
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     print(f"Running test for {size} elements")
 
-    nvtx.mark_all_methods(Test)
+    nvtx.annotate_all_methods(Test)
 
     fn   = init()
     test = Test(size)

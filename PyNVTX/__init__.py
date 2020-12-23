@@ -10,16 +10,16 @@ from .registry      import Registry
 
 
 major_version   = 0;
-minor_version   = 2;
-release_version = 3;
+minor_version   = 3;
+release_version = 0;
 
 NVTX_IDENTIFIER = "NVTX"
 REGISTRY = Registry()
 
 
 
-def mark(label):
-    def _mark(func):
+def annotate(label):
+    def _annotate(func):
         @wraps(func)
         def wrapped(*args, **kwargs):
             RangePushA(label)
@@ -27,7 +27,7 @@ def mark(label):
             RangePop()
             return ret
         return wrapped
-    return _mark
+    return _annotate
 
 
 
@@ -43,7 +43,7 @@ def dec_id_str(identifier):
 
 
 
-def mark_all_methods(cls):
+def annotate_all_methods(cls):
     if is_decorated(cls, NVTX_IDENTIFIER):
         return
 
@@ -52,7 +52,7 @@ def mark_all_methods(cls):
             continue
 
         if callable(cls.__dict__[attr]):
-            dec = mark(f"{cls}.{attr}")
+            dec = annotate(f"{cls}.{attr}")
             type.__setattr__(cls, attr, dec(cls.__dict__[attr]))
 
     type.__setattr__(cls, dec_id_str(NVTX_IDENTIFIER), True)
@@ -60,4 +60,4 @@ def mark_all_methods(cls):
     for base in cls.__bases__:
         if base == object:
            continue
-        mark_all_methods(base)
+        annotate_all_methods(base)

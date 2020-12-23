@@ -180,7 +180,7 @@ if __name__ == "__main__":
 
     setup(
         name="PyNVTX",
-        version="0.2.3",
+        version="0.3.0",
         author="Johannes Blaschke",
         author_email="johannes@blaschke.science",
         description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11 ... with some bells and whistles thrown in for good measure.",
