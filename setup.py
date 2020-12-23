@@ -3,6 +3,7 @@
 
 
 import os
+import sys
 import pybind11
 import setuptools
 
@@ -93,7 +94,6 @@ def customize_compiler_for_nvcc(self):
             postargs = extra_postargs['nvcc']
         else:
             postargs = extra_postargs['gcc']
-            return # do no compile the .cpp (as we're in nvcc mode)
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # Reset the default compiler_so, which we might have changed for cuda
@@ -104,110 +104,100 @@ def customize_compiler_for_nvcc(self):
 
 
 
-def customize_compiler_for_gcc(self):
-
-    # Tell the compiler it can processes .cu
-    self.src_extensions.append('.cu')
-
-    # Save references to the default compiler_so and _comple methods
-    super = self._compile
-
-    # Now redefine the _compile method. This gets executed for each
-    # object but distutils doesn't have the ability to change compilers
-    # based on source extension: we add it.
-    def _compile(obj, src, ext, cc_args, extra_postargs, pp_opts):
-        if os.path.splitext(src)[1] == '.cu':
-            return
-
-        super(obj, src, ext, cc_args, postargs, pp_opts)
-
-    # Inject our redefined _compile method into the class
-    self._compile = _compile
-
-
-
-
 # Run the customize_compiler
 class custom_build_ext(build_ext):
     def build_extensions(self):
-        if CUDA == None:
-            customize_compiler_for_gcc(self.compiler)
-            build_ext.build_extensions(self)
-        else:
-            customize_compiler_for_nvcc(self.compiler)
-            build_ext.build_extensions(self)
+        customize_compiler_for_nvcc(self.compiler)
+        build_ext.build_extensions(self)
 
 
 
-CUDA = locate_cuda()
+if __name__ == "__main__":
 
-if CUDA == None:
-    ext_modules = [
-        Extension(
-            "PyNVTX_backend",
-            sorted(glob(join("PyNVTX", "*.cpp")))
-            + sorted(glob(join("PyNVTX", "*.cu"))),
-            # this syntax is specific to this build system we're only going to
-            # use certain compiler args with nvcc and not with gcc the
-            # implementation of this trick is in customize_compiler() below
-            extra_compile_args={"gcc": [],},
-            include_dirs=["PyNVTX"]
-                        + [pybind11.get_include(True ),
-                           pybind11.get_include(False)]
-        )
-    ]
-else:
-    ext_modules = [
-        Extension(
-            "PyNVTX_backend",
-            sorted(glob(join("PyNVTX", "*.cpp")))
-            + sorted(glob(join("PyNVTX", "*.cu"))),
-            library_dirs=[CUDA["lib64"]],
-            libraries=["cudart", "nvToolsExt"],
-            runtime_library_dirs=[CUDA["lib64"]],
-            # this syntax is specific to this build system we're only going to
-            # use certain compiler args with nvcc and not with gcc the
-            # implementation of this trick is in customize_compiler() below
-            # extra_compile_args={"gcc": [],
-            #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
-            #                              "-c", "--compiler-options", "'-fPIC'"]},
-            extra_compile_args={"gcc": [],
-                                "nvcc": ["-std=c++11", "-O3", "-shared",
-                                         "--compiler-options", "-fPIC",
-                                         "-lnvToolsExt",]},
-            include_dirs=[CUDA["include"], "PyNVTX"]
-                        + [pybind11.get_include(True ),
-                           pybind11.get_include(False)]
-        )
-    ]
+    CUDA = locate_cuda()
 
-
-
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+    if CUDA == None:
+        ext_modules = [
+            Extension(
+                "PyNVTX_backend",
+                sorted(glob(join("PyNVTX", "*.cpp"))),
+                # this syntax is specific to this build system we're only going
+                # to use certain compiler args with nvcc and not with gcc the
+                # implementation of this trick is in customize_compiler() below
+                extra_compile_args={"gcc": [],},
+                include_dirs=["PyNVTX"]
+                            + [pybind11.get_include(True ),
+                               pybind11.get_include(False)]
+            )
+        ]
+    else:
+        ext_modules = [
+            Extension(
+                "PyNVTX_backend",
+                sorted(glob(join("PyNVTX", "*.cu"))),
+                library_dirs=[CUDA["lib64"]],
+                libraries=["cudart", "nvToolsExt"],
+                runtime_library_dirs=[CUDA["lib64"]],
+                # this syntax is specific to this build system we're only going
+                # to use certain compiler args with nvcc and not with gcc the
+                # implementation of this trick is in customize_compiler() below
+                # extra_compile_args={"gcc": [],
+                #                     "nvcc": ["-arch=sm_20", "--ptxas-options=-v",
+                #                              "-c", "--compiler-options", "'-fPIC'"]},
+                extra_compile_args={"gcc": [],
+                                    "nvcc": ["-std=c++11", "-O3", "-shared",
+                                             "--compiler-options", "-fPIC",
+                                             "-lnvToolsExt",]},
+                include_dirs=[CUDA["include"], "PyNVTX"]
+                            + [pybind11.get_include(True ),
+                               pybind11.get_include(False)]
+            )
+        ]
 
 
+    # We're in sdist mode => overwite extension module to include ALL sources
+    if "sdist" in sys.argv:
+        print(" *** ATTENTION: Running in sdist mode -- both CUDA and non-CUDA sources packaged to dist/")
+        ext_modules = [
+            Extension(
+                "PyNVTX_backend",
+                sorted(glob(join("PyNVTX", "*.cpp")))
+                + sorted(glob(join("PyNVTX", "*.cu"))),
+                # this syntax is specific to this build system we're only going
+                # to use certain compiler args with nvcc and not with gcc the
+                # implementation of this trick is in customize_compiler() below
+                extra_compile_args={"gcc": [],},
+                include_dirs=["PyNVTX"]
+                            + [pybind11.get_include(True ),
+                               pybind11.get_include(False)]
+            )
+        ]
 
-setup(
-    name="PyNVTX",
-    version="0.2.2",
-    author="Johannes Blaschke",
-    author_email="johannes@blaschke.science",
-    description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11",
-    ext_modules=ext_modules,
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/JBlaschke/PyNVTX",
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
-    python_requires='>=3.6',
-    install_requires=[
-      'pybind11',
-    ],
-    # inject our custom trigger
-    cmdclass={'build_ext': custom_build_ext},
-)
+
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+
+
+    setup(
+        name="PyNVTX",
+        version="0.2.3",
+        author="Johannes Blaschke",
+        author_email="johannes@blaschke.science",
+        description="A thin python wrapper for the nvToolsExt (NVTX) library, using pybind11 ... with some bells and whistles thrown in for good measure.",
+        ext_modules=ext_modules,
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        url="https://github.com/JBlaschke/PyNVTX",
+        packages=setuptools.find_packages(),
+        classifiers=[
+            "Programming Language :: Python :: 3",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: OS Independent",
+        ],
+        python_requires='>=3.6',
+        install_requires=[
+          'pybind11',
+        ],
+        # inject our custom trigger
+        cmdclass={'build_ext': custom_build_ext},
+    )
