@@ -3,6 +3,7 @@
 
 
 from functools import wraps
+from inspect   import signature
 
 from PyNVTX_backend import *
 from .singleton     import Singleton
@@ -11,7 +12,7 @@ from .registry      import Registry
 
 major_version   = 0;
 minor_version   = 3;
-release_version = 0;
+release_version = 1;
 
 NVTX_IDENTIFIER = "NVTX"
 REGISTRY = Registry()
@@ -21,12 +22,13 @@ REGISTRY = Registry()
 def annotate(label):
     def _annotate(func):
         @wraps(func)
-        def wrapped(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             RangePushA(label)
             ret = func(*args, **kwargs)
             RangePop()
             return ret
-        return wrapped
+        wrapper.__signature__ = signature(func)
+        return wrapper
     return _annotate
 
 
