@@ -12,23 +12,30 @@ from .registry      import Registry
 
 major_version   = 0;
 minor_version   = 3;
-release_version = 1;
+release_version = 2;
 
 NVTX_IDENTIFIER = "NVTX"
 REGISTRY = Registry()
 
 
 
-def annotate(label):
+def annotate(label, is_prefix=False):
+
     def _annotate(func):
+
+        if is_prefix:
+            label += "::" + func.__name__
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             RangePushA(label)
             ret = func(*args, **kwargs)
             RangePop()
             return ret
+
         wrapper.__signature__ = signature(func)
         return wrapper
+
     return _annotate
 
 
